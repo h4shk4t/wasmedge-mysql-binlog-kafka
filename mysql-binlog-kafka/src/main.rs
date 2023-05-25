@@ -9,7 +9,7 @@ use mysql_cdc::ssl_mode::SslMode;
 use rskafka::client::error::Error;
 
 use std::sync::Arc;
-use sqlparser::dialect::GenericDialect;
+use sqlparser::dialect::MySqlDialect;
 use sqlparser::parser::Parser;
 use sqlparser::ast::{Statement, ObjectType, TableFactor};
 use chrono::{TimeZone, Utc};
@@ -228,11 +228,11 @@ async fn main() -> Result<(), mysql_cdc::errors::Error> {
         let json_header = serde_json::to_string(&header).expect("Couldn't convert sql header to json");
 
         if let BinlogEvent::QueryEvent(value) = &event {
-            // Using Generic Dialect to make the parser work with any SQL Dialect
-            let dialect = GenericDialect{};
+            // // Using Generic Dialect to make the parser work with any SQL Dialect
+            // let dialect = GenericDialect{};
             // To uniquely store tables we use HashSet
             let mut query_tables = HashSet::new();
-            let ast = Parser::parse_sql(&dialect,&value.sql_statement).expect("Could not parse SQL Statement");
+            let ast = Parser::parse_sql(&MySqlDialect {},&value.sql_statement).expect("Could not parse SQL Statement");
 
             for statement in ast{
                 match statement {
@@ -268,7 +268,6 @@ async fn main() -> Result<(), mysql_cdc::errors::Error> {
                             }
                         }
                     }
-                    /*  Some internal parsing error because of sqlparser
                     Statement::Drop{object_type,names,..} => {
                         match object_type {
                             ObjectType::Table =>{
@@ -282,7 +281,6 @@ async fn main() -> Result<(), mysql_cdc::errors::Error> {
                         }
                     
                     }
-                    */
                     _ => {}
                 }
             }
